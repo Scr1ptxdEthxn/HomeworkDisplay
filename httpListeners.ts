@@ -17,30 +17,42 @@ app.use("/y11", express.static(path.join(process.cwd(), "Homeworks/y11")));
 app.use("/y10", express.static(path.join(process.cwd(), "Homeworks/y10")))
 
 app.get("/cs", (req, res) => {
-  if (req.query.recent != undefined) {
-    const folderPath = path.join(process.cwd(), "Homeworks/y11/Computer Science");
+if (req.query.recent != undefined) {
+  const folderPath = path.join(process.cwd(), "Homeworks/y11/Computer Science");
 
-    const files = fs.readdirSync(folderPath);
+  const files = fs.readdirSync(folderPath);
 
-    const numberedFiles = files
-      .map(file => {
-        // Match "Year 11 Interleaved <number>.pdf"
-        const match = file.match(/^Year 11 Interleaved (\d+)\.pdf$/);
-        if (match) return { file, num: parseInt(match[1], 10) };
-        return null;
-      })
-      .filter(Boolean) as { file: string; num: number }[];
+  const numberedFiles = files
+    .map(file => {
+      // Match both marked and unmarked variants
+      const match = file.match(/^Year 11 Interleaved (\d+)( - Marked)?\.pdf$/);
+      if (match) {
+        return {
+          file,
+          num: parseInt(match[1], 10),
+          marked: !!match[2],
+        };
+      }
+      return null;
+    })
+    .filter(Boolean) as { file: string; num: number; marked: boolean }[];
 
-    if (numberedFiles.length === 0) {
-      return res.status(404).send("No files found");
-    }
-
-    const latestFile = numberedFiles.reduce((prev, current) =>
-      current.num > prev.num ? current : prev
-    );
-
-    res.sendFile(path.join(folderPath, latestFile.file));
+  if (numberedFiles.length === 0) {
+    return res.status(404).send("No files found");
   }
+
+  // Sort by:
+  // 1. Higher number first
+  // 2. Marked before unmarked (for same number)
+  numberedFiles.sort((a, b) => {
+    if (b.num !== a.num) return b.num - a.num;
+    return Number(b.marked) - Number(a.marked);
+  });
+
+  const latestFile = numberedFiles[0];
+  res.sendFile(path.join(folderPath, latestFile.file));
+}
+
 })
 
 app.get("/", (req, res) => {
