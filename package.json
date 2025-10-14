@@ -1,0 +1,28 @@
+{
+    "dependencies": {
+        "cookie-parser": "^1.4.7",
+        "dotenv": "^16.3.1",
+        "express": "^4.21.2",
+        "path": "^0.12.7",
+        "pm2": "^5.3.0"
+    },
+    "name": "discordhsdigksdfihy",
+    "version": "1.0.0",
+    "main": "index.ts",
+    "scripts": {
+        "build": "tsup httpListeners.ts",
+        "start": "node dist/httpListeners.js",
+        "dev": "tsx watch httpListeners.ts"
+    },
+    "author": "",
+    "license": "ISC",
+    "description": "",
+    "devDependencies": {
+        "@types/cookie-parser": "^1.4.9",
+        "@types/express": "^5.0.3",
+        "@types/node": "^24.3.0",
+        "tsup": "^8.0.2",
+        "tsx": "^4.4.0",
+        "typescript": "^5.3.2"
+    }
+}
