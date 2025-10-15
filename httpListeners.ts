@@ -17,7 +17,7 @@ app.use("/y11", express.static(path.join(process.cwd(), "Homeworks/y11")));
 app.use("/y10", express.static(path.join(process.cwd(), "Homeworks/y10")))
 
 app.get("/cs", (req, res) => {
-if (req.cookies.Authorisation != "cheese") return res.status(403)
+if (req.cookies.Authorisation != "cheese") return res.json({status: 403, message: "Unauthorised"})
 if (req.query.recent != undefined) {
   const folderPath = path.join(process.cwd(), "Homeworks/y11/Computer Science");
 
@@ -57,7 +57,7 @@ if (req.query.recent != undefined) {
 })
 
 app.get("/", (req, res) => {
-  if (req.cookies.Authorisation != "cheese") return res.status(403)
+  if (req.cookies.Authorisation != "cheese") return res.json({status: 403, message: "Unauthorised"})
   const y10dir = path.join("Homeworks", "y10");
   const baseDir = path.join("Homeworks", "y11");
   let html = "<h1>Year 10</h1>";
