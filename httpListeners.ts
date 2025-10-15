@@ -1,4 +1,4 @@
-import express from "express";
+ import express from "express";
 import bodyParser from "body-parser";
 import cookieParser from "cookie-parser";
 import * as path from "path";
@@ -24,7 +24,7 @@ app.post("/submit-form", (req, res) => {
       secure: true, // Sent only over HTTPS
       sameSite: 'strict' // Prevents CSRF attacks
     });
-    res.status(200)
+    return res.status(200)
   }
   else {
     return res.json({status: 403, message:"Unauth"})
