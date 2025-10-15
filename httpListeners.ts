@@ -6,7 +6,6 @@ import fs from "fs";
 import dotenv from "dotenv";
 
 dotenv.config();
-// 
 const app = express();
 const PORT = 8451;
 
@@ -17,7 +16,18 @@ app.use("/y11", express.static(path.join(process.cwd(), "Homeworks/y11")));
 app.use("/y10", express.static(path.join(process.cwd(), "Homeworks/y10")))
 
 app.get("/cs", (req, res) => {
-if (req.cookies.Authorisation != "cheese") return res.json({status: 403, message: "Unauthorised"})
+if (req.cookies.Authorisation != "cheese") return res.send(`<!DOCTYPE html>
+<html lang="en">
+<body>
+
+<form action="/submit-form" method="post">
+  <label for="password">Enter your password:</label>
+  <input type="password" id="password" name="password" placeholder="Enter your secure password" required>
+  <input type="submit" value="Submit">
+</form>
+
+</body>
+</html>`)
 if (req.query.recent != undefined) {
   const folderPath = path.join(process.cwd(), "Homeworks/y11/Computer Science");
 
@@ -57,7 +67,18 @@ if (req.query.recent != undefined) {
 })
 
 app.get("/", (req, res) => {
-  if (req.cookies.Authorisation != "cheese") return res.json({status: 403, message: "Unauthorised"})
+  if (req.cookies.Authorisation != "cheese") return res.send(`<!DOCTYPE html>
+<html lang="en">
+<body>
+
+<form action="/submit-form" method="post">
+  <label for="password">Enter your password:</label>
+  <input type="password" id="password" name="password" placeholder="Enter your secure password" required>
+  <input type="submit" value="Submit">
+</form>
+
+</body>
+</html>`)
   const y10dir = path.join("Homeworks", "y10");
   const baseDir = path.join("Homeworks", "y11");
   let html = "<h1>Year 10</h1>";
