@@ -1,4 +1,4 @@
- import express from "express";
+import express from "express";
 import bodyParser from "body-parser";
 import cookieParser from "cookie-parser";
 import * as path from "path";
@@ -17,84 +17,61 @@ app.use("/y11", express.static(path.join(process.cwd(), "Homeworks/y11")));
 app.use("/y10", express.static(path.join(process.cwd(), "Homeworks/y10")))
 
 app.post("/submit-form", (req, res) => {
-  if (req.body.password === "Ethan1808!") {
-    res.cookie('Authorisation', 'cheese', {
-      maxAge: 1000 * 60 * 15, // Expires in 15 minutes
-      httpOnly: true, // Accessible only by the server
-      secure: true, // Sent only over HTTPS
-      sameSite: 'strict' // Prevents CSRF attacks
+  if (req.body.password === "homeworkwebsite25") {
+    res.cookie("Authorisation", "cheese", {
+      maxAge: 1000 * 60 * 15,
+      httpOnly: true,
+      secure: true,
+      sameSite: "strict"
     });
-    return res.status(200)
-  }
-  else {
-    return res.json({status: 403, message:"Unauth"})
+    return res.sendStatus(200);
+  } else {
+    return res.status(403).json({ message: "Unauth" });
   }
 })
 
 app.get("/cs", (req, res) => {
-if (req.cookies.Authorisation != "cheese") return res.send(`<!DOCTYPE html>
-<html lang="en">
-<body>
+  if (req.cookies.Authorisation != "cheese") return res.sendFile(path.resolve("enterPassword.html"))
+  if (req.query.recent != undefined) {
+    const folderPath = path.join(process.cwd(), "Homeworks/y11/Computer Science");
 
-<form action="/submit-form" method="post">
-  <label for="password">Enter your password:</label>
-  <input type="password" id="password" name="password" placeholder="Enter your secure password" required>
-  <input type="submit" value="Submit">
-</form>
+    const files = fs.readdirSync(folderPath);
 
-</body>
-</html>`)
-if (req.query.recent != undefined) {
-  const folderPath = path.join(process.cwd(), "Homeworks/y11/Computer Science");
+    const numberedFiles = files
+      .map(file => {
+        // Match both marked and unmarked variants
+        const match = file.match(/^Year 11 Interleaved (\d+)( - Marked)?\.pdf$/);
+        if (match) {
+          return {
+            file,
+            num: parseInt(match[1], 10),
+            marked: !!match[2],
+          };
+        }
+        return null;
+      })
+      .filter(Boolean) as { file: string; num: number; marked: boolean }[];
 
-  const files = fs.readdirSync(folderPath);
+    if (numberedFiles.length === 0) {
+      return res.status(404).send("No files found");
+    }
 
-  const numberedFiles = files
-    .map(file => {
-      // Match both marked and unmarked variants
-      const match = file.match(/^Year 11 Interleaved (\d+)( - Marked)?\.pdf$/);
-      if (match) {
-        return {
-          file,
-          num: parseInt(match[1], 10),
-          marked: !!match[2],
-        };
-      }
-      return null;
-    })
-    .filter(Boolean) as { file: string; num: number; marked: boolean }[];
+    // Sort by:
+    // 1. Higher number first
+    // 2. Marked before unmarked (for same number)
+    numberedFiles.sort((a, b) => {
+      if (b.num !== a.num) return b.num - a.num;
+      return Number(b.marked) - Number(a.marked);
+    });
 
-  if (numberedFiles.length === 0) {
-    return res.status(404).send("No files found");
+    const latestFile = numberedFiles[0];
+    res.sendFile(path.join(folderPath, latestFile.file));
   }
-
-  // Sort by:
-  // 1. Higher number first
-  // 2. Marked before unmarked (for same number)
-  numberedFiles.sort((a, b) => {
-    if (b.num !== a.num) return b.num - a.num;
-    return Number(b.marked) - Number(a.marked);
-  });
-
-  const latestFile = numberedFiles[0];
-  res.sendFile(path.join(folderPath, latestFile.file));
-}
 
 })
 
 app.get("/", (req, res) => {
-  if (req.cookies.Authorisation != "cheese") return res.send(`<!DOCTYPE html>
-<html lang="en">
-<body>
-
-<form action="/submit-form" method="post">
-  <label for="password">Enter your password:</label>
-  <input type="password" id="password" name="password" placeholder="Enter your secure password" required>
-  <input type="submit" value="Submit">
-</form>
-
-</body>
-</html>`)
+  if (req.cookies.Authorisation != "cheese") return res.sendFile(path.resolve("enterPassword.html"))
   const y10dir = path.join("Homeworks", "y10");
   const baseDir = path.join("Homeworks", "y11");
   let html = "<h1>Year 10</h1>";
