@@ -17,13 +17,14 @@ app.use("/y11", express.static(path.join(process.cwd(), "Homeworks/y11")));
 app.use("/y10", express.static(path.join(process.cwd(), "Homeworks/y10")))
 
 app.post("/submit-form", (req, res) => {
-  if (req.body.password === "Ethan1808") {
+  if (req.body.password === "Ethan1808!") {
     res.cookie('Authorisation', 'cheese', {
       maxAge: 1000 * 60 * 15, // Expires in 15 minutes
       httpOnly: true, // Accessible only by the server
       secure: true, // Sent only over HTTPS
       sameSite: 'strict' // Prevents CSRF attacks
     });
+    res.status(200)
   }
   else {
     return res.json({status: 403, message:"Unauth"})
