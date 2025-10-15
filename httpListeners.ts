@@ -11,6 +11,7 @@ const PORT = 8451;
 
 app.use(bodyParser.json());
 app.use(cookieParser());
+app.use(bodyParser.urlencoded({ extended: false }));
 
 app.use("/y11", express.static(path.join(process.cwd(), "Homeworks/y11")));
 app.use("/y10", express.static(path.join(process.cwd(), "Homeworks/y10")))
