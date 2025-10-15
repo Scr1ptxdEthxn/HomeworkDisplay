@@ -4,6 +4,10 @@ import cookieParser from "cookie-parser";
 import * as path from "path";
 import fs from "fs";
 import dotenv from "dotenv";
+import { QuickDB } from "quick.db";
+import * as crypto from "crypto";
+const db = new QuickDB()
+
 
 dotenv.config();
 const app = express();
@@ -16,10 +20,11 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use("/y11", express.static(path.join(process.cwd(), "Homeworks/y11")));
 app.use("/y10", express.static(path.join(process.cwd(), "Homeworks/y10")))
 
-app.post("/submit-form", (req, res) => {
-  if (req.body.password === "homeworkwebsite25") {
-    res.cookie("Authorisation", "cheese", {
-      maxAge: 1000 * 60 * 15,
+app.post("/submit-form", async (req, res) => {
+  let passwords = await db.get("passwords") as {user: string, pass: string, expiry: number, token: string}[] || []
+  if (passwords.some(entry => entry.pass === req.body.password)) {
+    res.cookie("Authorization", passwords.filter(e => e.pass === req.body.password)[0].token, {
+      maxAge: passwords.filter(e => e.pass === req.body.password)[0].expiry - Date.now(),
       httpOnly: true,
       secure: true,
       sameSite: "strict"
@@ -30,8 +35,43 @@ app.post("/submit-form", (req, res) => {
   }
 })
 
-app.get("/cs", (req, res) => {
-  if (req.cookies.Authorisation != "cheese") return res.sendFile(path.resolve("enterPassword.html"))
+async function generateUniquePassword() {
+    let attempts = 0;
+    let byteSize = 12; // smaller than 32, since we just need a password
+    while (true) {
+        const pass = crypto.randomBytes(byteSize).toString("hex");
+
+        const passwords = await db.get("passwords") as {user: string, pass:string, expiry: number}[] || [];
+
+        // check if any existing user already has this password
+        const exists = passwords.some(entry => entry.pass === pass);
+
+        if (!exists) return pass;
+
+        attempts++;
+        if (attempts % 10 === 0) {
+            byteSize *= 2; // increase randomness if collisions ever occur
+        }
+    }
+}
+
+app.post("/password-generate", async (req, res) => {
+  if (req.headers.authorization == "xX4tV9pLz2mQe8Rj0BfYcTwUs") {
+    if (!req.body.name) return res.status(400).json({ message: "name not supplied" })
+    if (!req.body.duration || req.body.duration == 0) {res.status(201); req.body.duration = 9999999999}
+    const pass = await generateUniquePassword();
+    if (!db.get("passwords")) await db.set("passwords", [])
+    await db.push("passwords", {user: req.body.name, pass: pass, expiry: Date.now() + (req.body.duration * 1000), token: crypto.randomBytes(32).toString("hex")})
+    return res.json(pass)
+  }
+  else return res.status(403).json({message: "Unauthorized"})
+})
+
+app.get("/cs", async (req, res) => {
+  let passwords = await db.get("passwords") as {token: string, expiry: number}[] || []
+  console.log(passwords.filter(ent => ent.token === req.cookies.Authorization)[0]?.expiry)
+  if (passwords.filter(ent => ent.token === req.cookies.Authorization)[0]?.expiry < Date.now()) res.clearCookie("Authorization") 
+  if (!passwords.some(ent => ent.token === req.cookies.Authorization)) return res.sendFile(path.resolve("enterPassword.html"))
   if (req.query.recent != undefined) {
     const folderPath = path.join(process.cwd(), "Homeworks/y11/Computer Science");
 
@@ -70,8 +110,10 @@ app.get("/cs", (req, res) => {
 
 })
 
-app.get("/", (req, res) => {
-  if (req.cookies.Authorisation != "cheese") return res.sendFile(path.resolve("enterPassword.html"))
+app.get("/", async (req, res) => {
+  let passwords = await db.get("passwords") as {token: string, expiry: number}[] || []
+  if (passwords.filter(ent => ent.token === req.cookies.Authorization)[0]?.expiry < Date.now()) res.clearCookie("Authorization") 
+  if (!passwords.some(ent => ent.token === req.cookies.Authorization)) return res.sendFile(path.resolve("enterPassword.html"))
   const y10dir = path.join("Homeworks", "y10");
   const baseDir = path.join("Homeworks", "y11");
   let html = "<h1>Year 10</h1>";
