@@ -24,7 +24,6 @@ app.post("/submit-form", (req, res) => {
       secure: true, // Sent only over HTTPS
       sameSite: 'strict' // Prevents CSRF attacks
     });
-    res.redirect("https://cshw.ethansrandomthings.uk")
   }
   else {
     return res.json({status: 403, message:"Unauth"})
